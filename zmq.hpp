@@ -233,14 +233,13 @@ proxy_steerable(void *frontend, void *backend, void *capture, void *control)
         template<typename I> message_t(I first, I last):
             msg()
         {
+            typedef typename std::iterator_traits<I>::value_type value_t;
 #ifdef ZMQ_CPP11
 			auto size_ = std::distance(first, last) * sizeof(value_t);
 #else
             typedef typename std::iterator_traits<I>::difference_type size_type;
 			size_type const size_ = std::distance(first, last) * sizeof(value_t);
 #endif
-            typedef typename std::iterator_traits<I>::value_type value_t;
-
             
             int const rc = zmq_msg_init_size (&msg, size_);
             if (rc != 0)
@@ -600,15 +599,15 @@ proxy_steerable(void *frontend, void *backend, void *capture, void *control)
             ptr = 0 ;
         }
 
+        inline void setsockopt(int option_, const std::string &optval)
+        {
+            setsockopt(option_, optval.c_str(), optval.length());
+        }
+
     template<typename T> inline void setsockopt(int option_, T const &optval)
         {
             setsockopt(option_, &optval, sizeof(T) );
         }
-
-		template<> inline void setsockopt(int option_, const std::string &optval)
-		{
-			setsockopt(option_, optval.c_str(), optval.length());
-		}
 
         inline void setsockopt (int option_, const void *optval_,
             size_t optvallen_)
@@ -687,6 +686,16 @@ proxy_steerable(void *frontend, void *backend, void *capture, void *control)
             return(ptr != NULL);
         }
         
+		inline size_t send(std::string const& msg, int flags_ = 0)
+		{
+			int nbytes = zmq_send(ptr, (void *)msg.c_str(), msg.size(), flags_);
+			if (nbytes >= 0)
+				return (size_t)nbytes;
+			if (zmq_errno() == EAGAIN)
+				return 0;
+			throw error_t();
+		}
+
         inline size_t send (const void *buf_, size_t len_, int flags_ = 0)
         {
             int nbytes = zmq_send (ptr, buf_, len_, flags_);
@@ -755,6 +764,15 @@ proxy_steerable(void *frontend, void *backend, void *capture, void *control)
         socket_t (const socket_t&) ZMQ_DELETED_FUNCTION;
         void operator = (const socket_t&) ZMQ_DELETED_FUNCTION;
     };
+
+
+    template<> inline std::string socket_t::getsockopt(int option_) const
+    {
+        size_t optlen = 256;
+        std::string ret(optlen,'\0');
+        getsockopt(option_, &ret[0], &optlen);
+        return ret;
+    }
 
     class monitor_t
     {
