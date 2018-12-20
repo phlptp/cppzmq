@@ -1,3 +1,4 @@
+set(PKG_CONFIG_USE_CMAKE_PREFIX_PATH ON)
 find_package(PkgConfig)
 pkg_check_modules(PC_LIBZMQ QUIET libzmq)
 
@@ -7,7 +8,7 @@ find_library(ZeroMQ_LIBRARY NAMES libzmq.so libzmq.dylib libzmq.dll
 find_library(ZeroMQ_STATIC_LIBRARY NAMES libzmq-static.a libzmq.a libzmq.dll.a
              PATHS ${PC_LIBZMQ_LIBDIR} ${PC_LIBZMQ_LIBRARY_DIRS})
 
-if(ZeroMQ_LIBRARY AND ZeroMQ_STATIC_LIBRARY)
+if(ZeroMQ_LIBRARY OR ZeroMQ_STATIC_LIBRARY)
     set(ZeroMQ_FOUND ON)
 endif()
 

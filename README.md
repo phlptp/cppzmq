@@ -1,6 +1,7 @@
-[![Travis-CI Status](https://travis-ci.org/zeromq/cppzmq.svg?branch=master)](https://travis-ci.org/zeromq/cppzmq)
-[![Appveyor Status](https://ci.appveyor.com/api/projects/status/bvi5axi8um7goh50/branch/master?svg=true)](https://ci.appveyor.com/project/zeromq/cppzmq/branch/master)
+[![Travis-CI Status](https://img.shields.io/travis/zeromq/cppzmq/master.svg?label=Linux%20|%20OSX)](https://travis-ci.org/zeromq/cppzmq)
+[![Appveyor Status](https://img.shields.io/appveyor/ci/zeromq/cppzmq/master.svg?label=Windows)](https://ci.appveyor.com/project/zeromq/cppzmq/branch/master)
 [![Coverage Status](https://coveralls.io/repos/github/zeromq/cppzmq/badge.svg?branch=master)](https://coveralls.io/github/zeromq/cppzmq?branch=master)
+[![License](https://img.shields.io/github/license/zeromq/cppzmq.svg)](https://github.com/zeromq/cppzmq/blob/master/LICENSE)
 
 Introduction & Design Goals
 ===========================
@@ -21,9 +22,9 @@ There are other C++ bindings for ZeroMQ with different design goals. In particul
 Supported platforms
 ===================
 
- - Only a subset of the platforms that are supported by libzmq itself are supported. Some features already require a compiler supporting C++11. In the future, probably all features will require C++11. To build and run the tests, cmake and googletest are required.
+ - Only a subset of the platforms that are supported by libzmq itself are supported. Some features already require a compiler supporting C++11. In the future, probably all features will require C++11. To build and run the tests, CMake and Catch are required.
  - Tested libzmq versions are
-   - 4.2.4 (without DRAFT API)
+   - 4.2.0 (without DRAFT API)
    - 4.2.5 (with and without DRAFT API)
  - Platforms with full support (i.e. CI executing build and tests)
    - Ubuntu 14.04 x64 (with gcc 4.8.4) (without DRAFT API only)
@@ -70,10 +71,7 @@ cpp zmq (which will also include libzmq for you).
 ```
 #find cppzmq wrapper, installed by make of cppzmq
 find_package(cppzmq)
-if(cppzmq_FOUND)
-    include_directories(${ZeroMQ_INCLUDE_DIR} ${cppzmq_INCLUDE_DIR})
-    target_link_libraries(*Your Project Name* ${cppzmq_LIBRARY})
-endif()
+target_link_libraries(*Your Project Name* cppzmq)
 ```
 
 

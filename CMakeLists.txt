@@ -10,9 +10,14 @@ find_package(ZeroMQ QUIET)
 
 # libzmq autotools install: fallback to pkg-config
 if(NOT ZeroMQ_FOUND)
-    # try again with pkg-config (normal install of zeromq)
+    message(STATUS "CMake libzmq package not found, trying again with pkg-config (normal install of zeromq)")
     list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/libzmq-pkg-config)
     find_package(ZeroMQ REQUIRED)
+endif()
+
+# TODO "REQUIRED" above should already cause a fatal failure if not found, but this doesn't seem to work
+if(NOT ZeroMQ_FOUND)
+    message(FATAL_ERROR "ZeroMQ was not found, neither as a CMake package nor via pkg-config")
 endif()
 
 if (ZeroMQ_FOUND AND (NOT TARGET libzmq OR NOT TARGET libzmq-static))
@@ -58,6 +63,10 @@ install(FILES ${CPPZMQ_HEADERS}
 
 # GNUInstallDirs "DATADIR" wrong here; CMake search path wants "share".
 set(CPPZMQ_CMAKECONFIG_INSTALL_DIR "share/cmake/${PROJECT_NAME}" CACHE STRING "install path for cppzmqConfig.cmake")
+
+configure_file(libzmq-pkg-config/FindZeroMQ.cmake
+               libzmq-pkg-config/FindZeroMQ.cmake
+               COPYONLY)
 
 export(EXPORT ${PROJECT_NAME}-targets
      FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
