@@ -1121,7 +1121,7 @@ constexpr const_buffer str_buffer(const Char (&data)[N]) noexcept
 #ifdef ZMQ_CPP14
     assert(data[N - 1] == Char{0});
 #endif
-    return const_buffer(static_cast<const Char*>(data), 
+    return const_buffer(static_cast<const Char*>(data),
                         (N - 1) * sizeof(Char));
 }
 
@@ -1155,6 +1155,11 @@ class socket_base
 public:
     socket_base() ZMQ_NOTHROW : _handle(ZMQ_NULLPTR) {}
     ZMQ_EXPLICIT socket_base(void *handle) ZMQ_NOTHROW : _handle(handle) {}
+
+    inline void setsockopt(int option_, const std::string &optval)
+           {
+               setsockopt(option_, optval.c_str(), optval.length());
+           }
 
     template<typename T> void setsockopt(int option_, T const &optval)
     {
@@ -1220,6 +1225,16 @@ public:
     }
 
     bool connected() const ZMQ_NOTHROW { return (_handle != ZMQ_NULLPTR); }
+
+    inline size_t send(std::string const& msg, , send_flags flags = send_flags::none)
+		{
+			int nbytes = zmq_send(ptr, (void *)msg.c_str(), msg.size(), static_cast<int>(flags));
+			if (nbytes >= 0)
+				return (size_t)nbytes;
+			if (zmq_errno() == EAGAIN)
+				return 0;
+			throw error_t();
+		}
 
 #ifdef ZMQ_CPP11
     ZMQ_DEPRECATED("from 4.3.1, use send taking a const_buffer and send_flags")
@@ -1622,6 +1637,14 @@ inline void proxy_steerable(socket_ref frontend,
         throw error_t();
 }
 #endif
+
+template<> inline std::string socket_t::getsockopt(int option_) const
+{
+    size_t optlen = 256;
+    std::string ret(optlen,'\0');
+    getsockopt(option_, &ret[0], &optlen);
+    return ret;
+}
 
 class monitor_t
 {
