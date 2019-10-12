@@ -87,7 +87,13 @@
 #include <memory>
 #endif
 #ifdef ZMQ_CPP17
+#ifdef __has_include
+#if __has_include(<optional>)
 #include <optional>
+#define ZMQ_HAS_OPTIONAL 1
+#endif
+#endif
+
 #endif
 
 /*  Version macros for compile-time API version detection                     */
@@ -700,7 +706,7 @@ struct recv_buffer_size
 namespace detail
 {
 
-#ifdef ZMQ_CPP17
+#if ZMQ_HAS_OPTIONAL > 0
 using send_result_t = std::optional<size_t>;
 using recv_result_t = std::optional<size_t>;
 using recv_buffer_result_t = std::optional<recv_buffer_size>;
@@ -1226,9 +1232,9 @@ public:
 
     bool connected() const ZMQ_NOTHROW { return (_handle != ZMQ_NULLPTR); }
 
-    inline size_t send(std::string const& msg, , send_flags flags = send_flags::none)
+    inline size_t send(std::string const& msg, send_flags flags = send_flags::none)
 		{
-			int nbytes = zmq_send(ptr, (void *)msg.c_str(), msg.size(), static_cast<int>(flags));
+			int nbytes = zmq_send(_handle, (void *)msg.c_str(), msg.size(), static_cast<int>(flags));
 			if (nbytes >= 0)
 				return (size_t)nbytes;
 			if (zmq_errno() == EAGAIN)
@@ -1402,6 +1408,14 @@ public:
 protected:
     void *_handle;
 };
+template<> inline std::string socket_base::getsockopt(int option_) const
+{
+    size_t optlen = 256;
+    std::string ret(optlen,'\0');
+    getsockopt(option_, &ret[0], &optlen);
+    ret.resize(optlen);
+    return ret;
+}
 } // namespace detail
 
 #ifdef ZMQ_CPP11
@@ -1637,14 +1651,6 @@ inline void proxy_steerable(socket_ref frontend,
         throw error_t();
 }
 #endif
-
-template<> inline std::string socket_t::getsockopt(int option_) const
-{
-    size_t optlen = 256;
-    std::string ret(optlen,'\0');
-    getsockopt(option_, &ret[0], &optlen);
-    return ret;
-}
 
 class monitor_t
 {
